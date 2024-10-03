@@ -6,7 +6,7 @@ __pycache__/
 .env.*.local
 
 # Editor directories and files
-.idea/
+.idea
 .vscode
 *.suo
 *.ntvs*
@@ -21,6 +21,10 @@ __pycache__/
 # venv
 .venv
 
+# db files
+/dbs
 .python-version
 
 .DS_Store
+
+serve.py
