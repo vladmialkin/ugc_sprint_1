@@ -1,0 +1,7 @@
+up:
+	docker compose up --build
+
+down:
+	docker compose down -v
+
+.DEFAULT_GOAL := up
