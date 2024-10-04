@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
+import json
 
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
-from faststream.kafka import KafkaBroker
+from aiokafka import AIOKafkaProducer
 
 from app.api.v1.router import router
 from app.broker import kafka
@@ -10,11 +11,22 @@ from app.settings.api import settings as api_settings
 from app.settings.kafka import settings as kafka_settings
 
 
+def serializer(value):
+    return json.dumps(value).encode()
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    kafka.kafka_conn = KafkaBroker(f"{kafka_settings.KAFKA_HOST}:{kafka_settings.KAFKA_PORT}")
+    kafka.kafka_producer = AIOKafkaProducer(
+        client_id="ugc_producer",
+        bootstrap_servers=f"{kafka_settings.KAFKA_HOST}:{kafka_settings.KAFKA_PORT}",
+        value_serializer=serializer,
+        key_serializer=serializer,
+        compression_type="gzip"
+    )
+    await kafka.kafka_producer.start()
     yield
-    await kafka.kafka_conn.close()
+    await kafka.kafka_producer.stop()
 
 
 app = FastAPI(
