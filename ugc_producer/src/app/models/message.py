@@ -8,3 +8,5 @@ class KafkaPayload(BaseModel):
     )
     key: str = Field(title="Ключ", description="Ключ события")
     value: str = Field(title="Значение события")
+
+

@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.api.deps.user import UserData
 from app.api.v1.schemas.events import (
     Click,
     PageView,
@@ -10,14 +11,17 @@ from app.api.v1.schemas.events import (
 )
 from app.models.message import KafkaPayload
 from app.models.event_types import get_topic_by_event
-from app.broker.kafka import get_kafka
+from app.broker.kafka import Producer
+
 
 router = APIRouter()
 
 
 @router.post("/", status_code=status.HTTP_200_OK)
 async def send_message(
-        msg: Click | PageView | TimeOnPage | ChangeVideoQuality | WatchToTheEnd | UsingSearchFilters
+        msg: Click | PageView | TimeOnPage | ChangeVideoQuality | WatchToTheEnd | UsingSearchFilters,
+        producer: Producer,
+        user: UserData
 ) -> None:
     """Ендпоинт для обработки события исходя из типа этого события и отправки сообщения в Kafka."""
     topic = await get_topic_by_event(msg.event_type)
@@ -30,8 +34,6 @@ async def send_message(
         key=msg.user_id,
         value=msg.model_dump_json()
     )
-
-    producer = await get_kafka()
 
     try:
         await producer.send(**payload.model_dump())
