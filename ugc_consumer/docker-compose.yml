@@ -136,12 +136,6 @@ services:
     networks:
       - movies-network
 
-  ugc:
-    container_name: movies-ugc
-    build:
-      context: .
-    networks:
-      - movies-network
 
 networks:
   movies-network:
