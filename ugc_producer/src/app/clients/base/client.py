@@ -2,11 +2,9 @@ import enum
 from json import JSONDecodeError
 from typing import Any
 
-from httpx import AsyncClient, ConnectError, Response, TimeoutException, codes
-
+from httpx import AsyncClient, Response, codes
 from tenacity import (
     retry,
-    retry_if_exception_type,
     stop_after_attempt,
     wait_random_exponential,
 )
@@ -16,7 +14,6 @@ from .exceptions import (
     BadRequestError,
     NotFoundError,
     ResponseDecodeError,
-    ServiceConnectionError,
     UnauthorizedError,
 )
 
@@ -30,7 +27,9 @@ class HTTPMethods(enum.StrEnum):
 
 
 class BaseClient:
-    def __init__(self, base_url: str, *, headers: dict[str, Any] | None = None):
+    def __init__(
+        self, base_url: str, *, headers: dict[str, Any] | None = None
+    ):
         self._base_url = base_url
         self._headers = headers
 
