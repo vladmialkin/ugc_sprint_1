@@ -22,10 +22,3 @@ class Groups(enum.Enum):
     custom_events = [EventTypes.CHANGE_VIDEO_QUALITY.value, EventTypes.WATCH_TO_THE_END.value,
                      EventTypes.USING_SEARCH_FILTERS.value]
 
-
-async def get_topic_by_event(event: str) -> str | None:
-    try:
-        [topic] = [i.name for i in Groups if event in i.value]
-    except ValueError as e:
-        return
-    return topic

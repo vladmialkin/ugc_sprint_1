@@ -1,5 +1,7 @@
 import asyncio
 import json
+import logging
+
 from aiokafka import AIOKafkaConsumer
 from aiohttp import ClientSession
 from aiochclient import ChClient
@@ -17,81 +19,8 @@ tables = {
     'using_search_filters': UsingSearchFilters,
 }
 
-
-async def create_tables(client):
-    await client.execute('''
-    CREATE TABLE IF NOT EXISTS default.click (
-        event_type String,
-        user_id String,
-        element_id String,
-        created_at String,
-        PRIMARY KEY (user_id, created_at)
-    ) ENGINE = MergeTree()
-    ORDER BY (user_id, created_at)
-    ''')
-
-    await client.execute('''
-    CREATE TABLE IF NOT EXISTS default.page_view (
-        event_type String,
-        user_id String,
-        page_id String,
-        element_id String,
-        element_info String,
-        created_at String,
-        PRIMARY KEY (user_id, created_at)
-    ) ENGINE = MergeTree()
-    ORDER BY (user_id, created_at)
-    ''')
-
-    await client.execute('''
-    CREATE TABLE IF NOT EXISTS default.time_on_page (
-        event_type String,
-        user_id String,
-        element_id String,
-        element_info String,
-        duration Int32,
-        created_at String,
-        PRIMARY KEY (user_id, created_at)
-    ) ENGINE = MergeTree()
-    ORDER BY (user_id, created_at)
-    ''')
-
-    await client.execute('''
-    CREATE TABLE IF NOT EXISTS default.change_video_quality (
-        event_type String,
-        user_id String,
-        video_id String,
-        quality_before Int32,
-        quality_after Int32,
-        created_at String,
-        PRIMARY KEY (user_id, created_at)
-    ) ENGINE = MergeTree()
-    ORDER BY (user_id, created_at)
-    ''')
-
-    await client.execute('''
-    CREATE TABLE IF NOT EXISTS default.watch_to_the_end (
-        event_type String,
-        user_id String,
-        video_id String,
-        duration Int32,
-        viewed Int32,
-        created_at String,
-        PRIMARY KEY (user_id, created_at)
-    ) ENGINE = MergeTree()
-    ORDER BY (user_id, created_at)
-    ''')
-
-    await client.execute('''
-    CREATE TABLE IF NOT EXISTS default.using_search_filters (
-        event_type String,
-        user_id String,               
-        filters String,            
-        created_at String,
-        PRIMARY KEY (user_id, created_at)
-    ) ENGINE = MergeTree()
-    ORDER BY (user_id, created_at)
-    ''')
+logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w",
+                    format="%(asctime)s %(levelname)s %(message)s")
 
 
 async def insert_into_clickhouse(table_name, schema, client):
@@ -101,7 +30,7 @@ async def insert_into_clickhouse(table_name, schema, client):
     query = f'INSERT INTO default.{table_name} VALUES'
 
     await client.execute(query, tuple(values))
-    print('Данные добавлены')
+    logging.info('Данные добавлены')
 
 
 async def consume():
@@ -116,7 +45,6 @@ async def consume():
     await consumer.start()
     async with ClientSession() as session:
         client = ChClient(session, url=clickhouse_settings.DSN)
-        await create_tables(client)
         try:
             async for message in consumer:
                 data = json.loads(message.value)
