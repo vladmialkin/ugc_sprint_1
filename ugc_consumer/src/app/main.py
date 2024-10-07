@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 
+import backoff
 from aiokafka import AIOKafkaConsumer
 from aiohttp import ClientSession
 from aiochclient import ChClient
@@ -23,6 +24,7 @@ logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w",
                     format="%(asctime)s %(levelname)s %(message)s")
 
 
+@backoff.on_exception(backoff.expo, Exception, max_tries=5)
 async def insert_into_clickhouse(table_name, schema, client):
     fields = schema.__dict__.keys()
     values = [getattr(schema, field) for field in fields]
@@ -36,6 +38,7 @@ async def insert_into_clickhouse(table_name, schema, client):
 async def consume():
     consumer = AIOKafkaConsumer(
         *kafka_settings.TOPIC_NAMES.split(','),
+        enable_auto_commit=False,
         bootstrap_servers=kafka_settings.KAFKA_BROKER,
         auto_offset_reset='earliest',
         group_id='my-group'
@@ -51,6 +54,7 @@ async def consume():
                 table = data.get('event_type')
                 schema = tables.get(table)(**data)
                 await insert_into_clickhouse(table, schema, client)
+                await consumer.commit()
         finally:
             await consumer.stop()
 
