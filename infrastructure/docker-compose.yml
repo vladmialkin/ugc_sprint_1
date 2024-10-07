@@ -7,9 +7,8 @@ services:
     volumes:
       - postgresql_data:/var/lib/postgresql/data
       - postgresql_initdb_data:/docker-entrypoint-initdb.d
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=a6a69c9927e948cf8f38335db9f4000f
+    env_file:
+      - .env
     networks: 
       - movies-network
     restart: always
@@ -21,9 +20,8 @@ services:
       - "5050:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=b9de630c8c7b42afbfdc533120f35b31
+    env_file:
+      - .env
     networks:
       -  movies-network
     restart: always
@@ -39,11 +37,8 @@ services:
       - "9200:9200"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
-    environment:
-      - node.name=es01
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    env_file:
+      - env
     networks:
       -  movies-network
     restart: always
@@ -80,15 +75,8 @@ services:
     volumes:
       - kafka_data:/bitnami/kafka/data
     environment:
-      - KAFKA_ENABLE_KRAFT=yes
-      - KAFKA_CFG_PROCESS_ROLES=broker,controller
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_NODE_ID=0
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
-      - KAFKA_KRAFT_CLUSTER_ID=7a308b458a504fb5bf17a3197da68222
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+    env_file:
+      - .env
     networks:
       - movies-network
     restart: always
